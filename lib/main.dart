@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'widget/login.dart';
+
 class MainScreen extends StatelessWidget {
   const MainScreen({Key? key}) : super(key: key);
 
@@ -7,17 +9,6 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       child: Text('MainScreen'),
-    );
-  }
-}
-
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Text('LoginScreen'),
     );
   }
 }
