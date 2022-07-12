@@ -34,7 +34,7 @@ class LoginBackground extends StatefulWidget {
 class _LoginBackgroundState extends State<LoginBackground> {
   // Gyro-sensitive motion background
   // https://blog.joshsoftware.com/2020/12/12/flutter-interactive-motion-backgrounds/
-  final int backgroundShakeSensitivity = 15;
+  final int backgroundShakeSensitivity = 1;
   double xPosition = 0;
   late StreamSubscription<AccelerometerEvent> _accelerometerSubscription;
 
@@ -44,7 +44,7 @@ class _LoginBackgroundState extends State<LoginBackground> {
     accelerometerEvents.listen((AccelerometerEvent event) {
       setState(() {
         xPosition +=
-          (xPosition + event.x * backgroundShakeSensitivity).abs() <= 90 ?
+          (xPosition + event.x * backgroundShakeSensitivity).abs() <= 50 ?
           event.x * backgroundShakeSensitivity : 0;
         print(xPosition);
       });
