@@ -1,5 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get/get.dart';
 import 'package:sleep_manager_app/exception/data/DataFetchException.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../exception/InitializationException.dart';
 
@@ -10,12 +12,30 @@ class Util {
       throw DuplicateInitException('backend.Util');
     }
     try {
-      dotenv.load(fileName: 'assets/config/.env');
+      // Operation 1
+      await () async {
+        dotenv.load(fileName: 'assets/config/.env');
+      } ();
+      // Operation 2
+      await () async {
+        _databaseInitialize();
+      } ();
+
       _isInitialized = true;
     } catch (e) {
       throw InitializationFailException('backend.Util');
     }
   }
+
+  static void _databaseInitialize() async {
+    // Create/Open database from file
+    String databaseFileName = Util.env('DATABASE_FILENAME');
+    getDatabasesPath()
+        .then((databasePath) => '$databasePath/$databaseFileName')
+        .then((createdFilePath) => openDatabase(createdFilePath))
+        .then((createdDatabase) => Get.put(createdDatabase));
+  }
+
 
   /// Get the environment variable from .env file
   /// by searching [key] from parameter and return it as [String].
@@ -29,4 +49,5 @@ class Util {
     }
     return value;
   }
+
 }
