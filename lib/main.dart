@@ -13,6 +13,7 @@ Widget initialize_application() {
     theme: ThemeData(
       primarySwatch: Colors.deepPurple,
     ),
+    debugShowCheckedModeBanner: false,
     home: false ? const MainScreen() : const LoginScreen(),
   );
 }
