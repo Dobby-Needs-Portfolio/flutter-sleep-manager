@@ -1,10 +1,11 @@
-import 'dart:async';
 import 'dart:developer' as developer;
-import 'dart:ffi';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+
+import '../backend/Util.dart';
 
 /// Login Screen that manages login/signup flow.
 class LoginScreen extends StatelessWidget {
@@ -22,7 +23,7 @@ class LoginScreen extends StatelessWidget {
           // Background
           _LoginBackground(),
           // Login/Signup Selection screen.
-          Center(child: LoginSelectionWidget()),
+          const Center(child: LoginSelectionWidget()),
 
         ],
 
@@ -66,7 +67,6 @@ class _LoginBackgroundController extends GetxController {
       (xPosition.value + acc).abs() <= _backgroundShakeLimit
           ? acc
           : 0.0;
-      developer.log("xPosition on GetX: ${xPosition.value}");
     });
   }
 }
@@ -80,19 +80,14 @@ class LoginSelectionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     var controller = Get.put(_LoginSelectionController());
     return Obx(() =>
-      Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Login/signup form. change the widget depending on the selection.
-          controller._isLoginSelected.value ? _LoginForm() : SignupForm(),
-        ],
-      ),
+      controller.isLoginSelected.value ? _LoginForm() : const SignupForm(),
     );
   }
 }
 
 class _LoginSelectionController extends GetxController {
-  RxBool _isLoginSelected = true.obs;
+  final RxBool isLoginSelected = true.obs;
+
 }
 
 class _LoginForm extends GetView<_LoginFormController> {
@@ -100,45 +95,110 @@ class _LoginForm extends GetView<_LoginFormController> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Login form that receives paconst ssword, email and login button.
+      // Login form that receives password, email and login button.
       child: Form(
         key: controller.loginFormKey,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Email text field.
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-                labelStyle: TextStyle(
+            // "Login" Text
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: const Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: 60,
                   color: Colors.white,
+                  // YUniverse Light.
+                  fontFamily: 'YUniverse',
+                  fontWeight: FontWeight.w300,
                 ),
+                textAlign: TextAlign.left,
               ),
-              style: TextStyle(fontSize: 20, color: Colors.white),
-              controller: controller.emailController,
-              validator: controller.emailValidator,
+            ),
+            // Email text field.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(35.0, 5.0, 35.0, 15.0),
+              child: TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(
+                    color: Colors.white,
+                  ),
+                ),
+                style: const TextStyle(fontSize: 20, color: Colors.white),
+                controller: controller.emailController,
+                validator: controller.emailValidator,
+              ),
             ),
             // Password text field.
-            TextFormField(
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-                labelStyle: TextStyle(
-                  color: Colors.white,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(35.0, 5.0, 35.0, 15.0),
+              child: TextFormField(
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  labelStyle: TextStyle(
+                    color: Colors.white,
+                  ),
                 ),
+                style: const TextStyle(fontSize: 20, color: Colors.white),
+                controller: controller.passwordController,
+                validator: controller.passwordValidator,
               ),
-              style: TextStyle(fontSize: 20, color: Colors.white),
-              controller: controller.passwordController,
-              validator: controller.passwordValidator,
             ),
             // Login button.
             ElevatedButton(
-              child: Text('Login'),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                minimumSize: const Size(180, 35)
+              ),
               onPressed: () {
                 controller.login();
               },
+              child: const Text('Login'),
+            ),
+            // "Not a member? <a>sign up<a> text that change states to signup form.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(35.0, 15.0, 35.0, 15.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Not a member?',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                      // YUniverse Light.
+                      fontFamily: 'YUniverse',
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _LoginSelectionController loginController = Get.find();
+                      loginController.isLoginSelected.value = false;
+                    },
+                    child: Text(
+                      'Sign up',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        // YUniverse Light.
+                        fontFamily: 'YUniverse',
+                        fontWeight: FontWeight.w300,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -177,6 +237,16 @@ class _LoginFormController extends GetxController {
           "id: ${emailController.text}, "
           "password: ${passwordController.text}");
       // Login logic
+      Dio().post('${Util.env('SERVER_URL')}/login',
+          data: {
+            'email': emailController.text,
+            'password': passwordController.text,
+          }).then((response) {
+        if (response.statusCode == 200) {
+          // Save token sent by server to database and navigate to MainScreen.
+          Get.offAllNamed('/main');
+        }
+      });
     }
   }
 }
@@ -187,7 +257,7 @@ class SignupForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Text('SignupForm'),
+      child: const Text('SignupForm'),
     );
   }
 }
