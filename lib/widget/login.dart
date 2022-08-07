@@ -14,6 +14,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Get.put(_LoginFormController());
+    Get.put(_SignupFormController());
     Get.put(_LoginBackgroundController());
     return Material(
       // Use stack to position the login form over the background image.
@@ -80,13 +81,13 @@ class LoginSelectionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     var controller = Get.put(_LoginSelectionController());
     return Obx(() =>
-      controller.isLoginSelected.value ? _LoginForm() : const SignupForm(),
+      controller.isLoginSelected.value ? _LoginForm() : _SignupForm(),
     );
   }
 }
 
 class _LoginSelectionController extends GetxController {
-  final RxBool isLoginSelected = true.obs;
+  final RxBool isLoginSelected = false.obs;
 
 }
 
@@ -211,8 +212,8 @@ class _LoginFormController extends GetxController {
   // Login form key.
   final GlobalKey<FormState> loginFormKey = GlobalKey<FormState>();
   // Controllers
-  var emailController = TextEditingController();
-  var passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   // Validators
   String? emailValidator(String? value) {
@@ -251,13 +252,220 @@ class _LoginFormController extends GetxController {
   }
 }
 
-class SignupForm extends StatelessWidget {
-  const SignupForm({Key? key}) : super(key: key);
+class _SignupForm extends GetView<_SignupFormController> {
+  const _SignupForm({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: const Text('SignupForm'),
+    return Form(
+      key: controller.signupFormKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // "Login" Text
+          const Padding(
+            padding: EdgeInsets.all(12.0),
+            child: Text(
+              'Sign up',
+              style: TextStyle(
+                fontSize: 60,
+                color: Colors.white,
+                // YUniverse Light.
+                fontFamily: 'YUniverse',
+                fontWeight: FontWeight.w300,
+              ),
+              textAlign: TextAlign.left,
+            ),
+          ),
+          // Username text field.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(35.0, 5.0, 35.0, 15.0),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Username',
+                border: OutlineInputBorder(),
+                labelStyle: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              style: const TextStyle(fontSize: 20, color: Colors.white),
+              controller: controller.usernameController,
+              validator: controller.usernameValidator,
+            ),
+          ),
+          // Email text field.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(35.0, 5.0, 35.0, 15.0),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+                labelStyle: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              style: const TextStyle(fontSize: 20, color: Colors.white),
+              controller: controller.emailController,
+              validator: controller.emailValidator,
+            ),
+          ),
+          // Password text field.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(35.0, 5.0, 35.0, 15.0),
+            child: TextFormField(
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                labelStyle: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              style: const TextStyle(fontSize: 20, color: Colors.white),
+              controller: controller.passwordController,
+              validator: controller.passwordValidator,
+            ),
+          ),
+          // Login button.
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                minimumSize: const Size(180, 35)
+            ),
+            onPressed: () {
+              controller.signup();
+            },
+            child: const Text('Sign up'),
+          ),
+          // "Already registered? <a>login<a> text that change states to signup form.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(35.0, 15.0, 35.0, 15.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Already registered?',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    // YUniverse Light.
+                    fontFamily: 'YUniverse',
+                    fontWeight: FontWeight.w300,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+                TextButton(
+                  onPressed: () {
+                    _LoginSelectionController loginController = Get.find();
+                    loginController.isLoginSelected.value = true;
+                  },
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.deepPurple,
+                      // YUniverse Light.
+                      fontFamily: 'YUniverse',
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _SignupFormController extends GetxController {
+  // Signup form key.
+  final GlobalKey<FormState> signupFormKey = GlobalKey<FormState>();
+  // Controllers
+  final usernameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  // Validators
+  String? usernameValidator(String? value) {
+    // If value is empty
+    if (value == null || value.isEmpty) {
+      return 'Please enter your username';
+    }
+    // If value has forbidden characters
+    if (!RegExp("^[A-Za-z0-9._]+\$").hasMatch(value)) {
+      return 'Only lowercase, uppercase, number, ._ is allowed';
+    }
+    return null;
+  }
+
+  String? emailValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    } else if (!RegExp("^[a-zA-Z0-9.a-zA-Z0-9.!#\$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\\.[a-zA-Z]+").hasMatch(value)) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  String? passwordValidator(String? value) {
+    // If password is empty
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
+    // If password have unauthorised characters
+    if (!RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*])(?=.{8,})").hasMatch(value)) {
+      return 'Only lowercase, uppercase, numbers and !@#\$%^& allowed';
+    }
+    // If password is less than 8 characters or more than 40 characters
+    else if (value.length < 8 || value.length > 20) {
+      return 'Password must be between 8 and 40 characters';
+    }
+    // If password does not contain at least one uppercase letter
+    else if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    // If password does not contain at least one lowercase letter
+    else if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    // If password does not contain at least one number
+    else if (!RegExp(r'[0-9]').hasMatch(value)) {
+      return 'Password must contain at least one number';
+    }
+    // If password does not contain at least one special character
+    else if (!RegExp(r'[!@#\$%^&*]').hasMatch(value)) {
+      return 'Password must contain at least one special character';
+    }
+
+    return null;
+  }
+
+  // Signup
+  void signup() {
+    if (signupFormKey.currentState!.validate()) {
+      developer.log("Signup button clicked, "
+          "username: ${usernameController.text}, "
+          "email: ${emailController.text}, "
+          "password: ${passwordController.text}");
+      // Signup logic
+      Dio().post('${Util.env('SERVER_URL')}/signup',
+          data: {
+            'username': usernameController.text,
+            'email': emailController.text,
+            'password': passwordController.text,
+          }).then((response) {
+        if (response.statusCode == 200) {
+          // Save token sent by server to database and navigate to MainScreen.
+          Get.offAllNamed('/main');
+        }
+      });
+    }
+  }
+
 }
